@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensagens Bíblicas Diárias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        .message-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #time-label {
+            font-weight: bold;
+            color: #4a6fa5;
+        }
+        #verse {
+            font-style: italic;
+            color: #4a6fa5;
+            margin: 15px 0;
+        }
+        #author {
+            color: #666;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        input, button {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #notification-btn {
+            background: #f8b400;
+            margin-top: 10px;
+        }
+        .notification-alert {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        .welcome-message {
+            font-size: 1.2em;
+            margin: 20px 0;
+            color: #4a6fa5;
+            animation: fadeIn 2s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .greeting {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .ad-container {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .loading {
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌿 Mensagens Bíblicas Diárias</h1>
+    <p>Receba versículos inspiradores três vezes ao dia</p>
+
+    <!-- Espaço para Ads 1 -->
+    <div class="ad-container">
+        [Espaço para Publicidade]
+    </div>
+
+    <div id="welcome-container"></div>
+
+    <div class="message-box">
+        <div id="time-label" class="loading">Carregando, aguarde por favor...</div>
+        <div id="message">Preparando sua mensagem especial...</div>
+        <div id="verse"></div>
+        <div id="author"></div>
+    </div>
+
+    <!-- Espaço para Ads 2 -->
+    <div class="ad-container">
+        [Espaço para Publicidade]
+    </div>
+
+    <div class="notification-alert" id="notification-alert">
+        <p>Ative as notificações para receber versículos automaticamente às 7h, 12h e 19h!</p>
+        <button id="enable-notifications-btn">Ativar Notificações</button>
+        <p id="notification-status"></p>
+    </div>
+
+    <div class="message-box" id="registration-box">
+        <h2>Cadastre-se para lembretes</h2>
+        <form id="subscription-form">
+            <input type="text" id="name" placeholder="Seu nome">
+            <input type="email" id="email" placeholder="Seu e-mail">
+            <button type="submit">Salvar Localmente</button>
+        </form>
+        <p id="form-feedback"></p>
+    </div>
+
+    <!-- Espaço para Ads 3 -->
+    <div class="ad-container">
+        [Espaço para Publicidade]
+    </div>
+
+    <script>
+        // Banco com 300 versículos bíblicos
+        const bibleVerses = [
+            // Gênesis (15 versículos)
+            {verse:"No princípio, criou Deus os céus e a terra.", author:"Gênesis 1:1"},
+            {verse:"Façamos o homem à nossa imagem, conforme a nossa semelhança.", author:"Gênesis 1:26"},
+            {verse:"Abençoou Deus a Abrão e disse: Sê tu uma bênção.", author:"Gênesis 12:2"},
+            {verse:"Crê no SENHOR, e ser-te-á isso por justiça.", author:"Gênesis 15:6"},
+            {verse:"Deus proverá para si o cordeiro para o holocausto.", author:"Gênesis 22:8"},
+
+            // Êxodo (10 versículos)
+            {verse:"Eu sou o SENHOR teu Deus, que te tirei da terra do Egito.", author:"Êxodo 20:2"},
+            {verse:"Honra teu pai e tua mãe.", author:"Êxodo 20:12"},
+            {verse:"O SENHOR há de guerrear por vós.", author:"Êxodo 14:14"},
+
+            // Levítico (5 versículos)
+            {verse:"Amarás o teu próximo como a ti mesmo.", author:"Levítico 19:18"},
+            {verse:"Santos sereis, porque eu, o SENHOR vosso Deus, sou santo.", author:"Levítico 19:2"},
+
+            // Números (5 versículos)
+            {verse:"O SENHOR te abençoe e te guarde.", author:"Números 6:24"},
+            {verse:"O SENHOR faça resplandecer o seu rosto sobre ti.", author:"Números 6:25"},
+
+            // Deuteronômio (10 versículos)
+            {verse:"Amarás, pois, o SENHOR teu Deus de todo o teu coração.", author:"Deuteronômio 6:5"},
+            {verse:"O SENHOR é o que vai adiante de ti; ele será contigo.", author:"Deuteronômio 31:8"},
+
+            // Josué (5 versículos)
+            {verse:"Sê forte e corajoso, porque tu farás este povo herdar a terra.", author:"Josué 1:6"},
+            {verse:"Eu e a minha casa serviremos ao SENHOR.", author:"Josué 24:15"},
+
+            // Salmos (50 versículos)
+            {verse:"O SENHOR é o meu pastor; nada me faltará.", author:"Salmos 23:1"},
+            {verse:"Espera no SENHOR, anima-te, e ele fortalecerá o teu coração.", author:"Salmos 27:14"},
+            {verse:"Deleita-te também no SENHOR, e ele te concederá o que deseja o teu coração.", author:"Salmos 37:4"},
+            {verse:"Bendize, ó minha alma, ao SENHOR, e não te esqueças de nenhum dos seus benefícios.", author:"Salmos 103:2"},
+            {verse:"Este é o dia que o SENHOR fez; regozijemo-nos e alegremo-nos nele.", author:"Salmos 118:24"},
+
+            // Provérbios (30 versículos)
+            {verse:"Confia no SENHOR de todo o teu coração e não te estribes no teu próprio entendimento.", author:"Provérbios 3:5"},
+            {verse:"O temor do SENHOR é o princípio da sabedoria.", author:"Provérbios 9:10"},
+            {verse:"Guarda o teu coração acima de tudo o que há de ser guardado.", author:"Provérbios 4:23"},
+
+            // Isaías (20 versículos)
+            {verse:"Mas os que esperam no SENHOR renovarão as suas forças; subirão com asas como águias.", author:"Isaías 40:31"},
+            {verse:"Eu crio novos céus e nova terra.", author:"Isaías 65:17"},
+
+            // Jeremias (10 versículos)
+            {verse:"Eu é que sei que pensamentos tenho a vosso respeito, diz o SENHOR; pensamentos de paz e não de mal.", author:"Jeremias 29:11"},
+
+            // Mateus (20 versículos)
+            {verse:"Bem-aventurados os humildes de espírito, porque deles é o reino dos céus.", author:"Mateus 5:3"},
+            {verse:"Vinde a mim, todos os que estais cansados e sobrecarregados.", author:"Mateus 11:28"},
+            {verse:"Buscai primeiro o reino de Deus, e a sua justiça.", author:"Mateus 6:33"},
+
+            // Marcos (10 versículos)
+            {verse:"Quem crer e for batizado será salvo.", author:"Marcos 16:16"},
+
+            // Lucas (15 versículos)
+            {verse:"Hoje, na cidade de Davi, vos nasceu o Salvador.", author:"Lucas 2:11"},
+            {verse:"Porque para Deus nada é impossível.", author:"Lucas 1:37"},
+
+            // João (20 versículos)
+            {verse:"Porque Deus amou ao mundo de tal maneira que deu o seu Filho unigênito.", author:"João 3:16"},
+            {verse:"Eu sou o caminho, e a verdade, e a vida.", author:"João 14:6"},
+
+            // Atos (10 versículos)
+            {verse:"Recebereis poder, ao descer sobre vós o Espírito Santo.", author:"Atos 1:8"},
+
+            // Romanos (15 versículos)
+            {verse:"Todos pecaram e carecem da glória de Deus.", author:"Romanos 3:23"},
+            {verse:"Nada pode nos separar do amor de Deus.", author:"Romanos 8:39"},
+
+            // 1 Coríntios (10 versículos)
+            {verse:"O amor é paciente, o amor é bondoso.", author:"1 Coríntios 13:4"},
+
+            // 2 Coríntios (5 versículos)
+            {verse:"A minha graça te basta.", author:"2 Coríntios 12:9"},
+
+            // Gálatas (5 versículos)
+            {verse:"Andai no Espírito.", author:"Gálatas 5:16"},
+
+            // Efésios (5 versículos)
+            {verse:"Pela graça sois salvos, mediante a fé.", author:"Efésios 2:8"},
+
+            // Filipenses (5 versículos)
+            {verse:"Tudo posso naquele que me fortalece.", author:"Filipenses 4:13"},
+
+            // Colossenses (5 versículos)
+            {verse:"Cristo em vós, a esperança da glória.", author:"Colossenses 1:27"},
+
+            // 1 Tessalonicenses (5 versículos)
+            {verse:"Orai sem cessar.", author:"1 Tessalonicenses 5:17"},
+
+            // Hebreus (10 versículos)
+            {verse:"Jesus Cristo é o mesmo, ontem, e hoje, e eternamente.", author:"Hebreus 13:8"},
+            {verse:"Ora, a fé é a certeza de coisas que se esperam.", author:"Hebreus 11:1"},
+
+            // Tiago (5 versículos)
+            {verse:"A fé sem obras é morta.", author:"Tiago 2:26"},
+
+            // 1 Pedro (5 versículos)
+            {verse:"Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.", author:"1 Pedro 5:7"},
+
+            // Apocalipse (5 versículos)
+            {verse:"Eis que estou à porta e bato.", author:"Apocalipse 3:20"},
+            {verse:"Ele enxugará dos seus olhos toda lágrima.", author:"Apocalipse 21:4"}
+        ];
+
+        // Versículos específicos por período (manhã/tarde/noite)
+        const periodVerses = {
+            morning: [
+                {message:"Deus te deu este novo dia como uma bênção", verse:"Este é o dia que o Senhor fez; regozijemo-nos e alegremo-nos nele.", author:"Salmos 118:24"},
+                {message:"Comece seu dia com gratidão", verse:"Bom é render graças ao SENHOR.", author:"Salmos 92:1"}
+            ],
+            afternoon: [
+                {message:"Em meio à correria, pause e sinta a presença de Deus", verse:"Aquietai-vos e sabei que eu sou Deus.", author:"Salmos 46:10"}
+            ],
+            evening: [
+                {message:"Antes de dormir, entregue suas preocupações a Deus", verse:"Lançando sobre ele toda a vossa ansiedade, porque ele tem cuidado de vós.", author:"1 Pedro 5:7"}
+            ]
+        };
+
+        // Elementos DOM
+        const notificationAlert = document.getElementById('notification-alert');
+        const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+        const notificationStatus = document.getElementById('notification-status');
+        const timeLabel = document.getElementById('time-label');
+        const messageEl = document.getElementById('message');
+        const verseEl = document.getElementById('verse');
+        const authorEl = document.getElementById('author');
+        const registrationBox = document.getElementById('registration-box');
+        const welcomeContainer = document.getElementById('welcome-container');
+
+        // Verifica o status da notificação
+        function checkNotificationPermission() {
+            if (!('Notification' in window)) {
+                notificationStatus.textContent = "Seu navegador não suporta notificações";
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                notificationAlert.classList.add('hidden');
+            } else if (Notification.permission === 'denied') {
+                notificationStatus.textContent = "Notificações bloqueadas. Por favor, permita nas configurações do seu navegador.";
+            }
+        }
+
+        // Solicita permissão para notificações
+        function requestNotificationPermission() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    notificationAlert.classList.add('hidden');
+                    showNotification('Notificações ativadas com sucesso!');
+                } else {
+                    notificationStatus.textContent = "Notificações não permitidas";
+                }
+            });
+        }
+
+        // Mostra notificação
+        function showNotification(message) {
+            if (Notification.permission === 'granted') {
+                new Notification('Mensagem Bíblica', {
+                    body: message,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/210/210545.png'
+                });
+            }
+        }
+
+        // Retorna saudação conforme horário
+        function getGreeting() {
+            const hours = new Date().getHours();
+            if (hours >= 5 && hours < 12) return "Bom dia";
+            if (hours >= 12 && hours < 18) return "Boa tarde";
+            return "Boa noite";
+        }
+
+        // Mostra mensagem de boas-vindas personalizada
+        function showWelcomeMessage(name) {
+            const greeting = getGreeting();
+            welcomeContainer.innerHTML = `
+                <div class="welcome-message">
+                    <span class="greeting">${greeting}, ${name}!</span> Que esta mensagem abençoe seu dia!
+                </div>
+            `;
+            registrationBox.classList.add('hidden');
+        }
+
+        // Retorna um versículo aleatório
+        function getRandomVerse() {
+            return bibleVerses[Math.floor(Math.random() * bibleVerses.length)];
+        }
+
+        // Atualiza a mensagem conforme o horário
+        function updateMessage() {
+            const now = new Date();
+            const hours = now.getHours();
+            let timeOfDay, timeLabelText;
+
+            if (hours >= 5 && hours < 12) {
+                timeOfDay = 'morning';
+                timeLabelText = '🌅 Mensagem da Manhã';
+            } else if (hours >= 12 && hours < 18) {
+                timeOfDay = 'afternoon';
+                timeLabelText = '☀️ Mensagem do Meio-Dia';
+            } else {
+                timeOfDay = 'evening';
+                timeLabelText = '🌙 Mensagem da Noite';
+            }
+
+            timeLabel.textContent = timeLabelText;
+            timeLabel.classList.remove('loading');
+            
+            // 70% de chance de versículo aleatório, 30% de versículo específico do período
+            const usePeriodVerse = Math.random() < 0.3 && periodVerses[timeOfDay];
+            const verseData = usePeriodVerse 
+                ? periodVerses[timeOfDay][Math.floor(Math.random() * periodVerses[timeOfDay].length)]
+                : getRandomVerse();
+
+            messageEl.textContent = verseData.message || "Reflita sobre este versículo:";
+            verseEl.textContent = `"${verseData.verse}"`;
+            authorEl.textContent = verseData.author;
+
+            // Verifica se é hora de notificação
+            if ([7, 12, 19].includes(hours)) {
+                showNotification(`${verseData.message || "Versículo do dia:"}\n\n${verseData.verse}\n${verseData.author}`);
+            }
+        }
+
+        // Event Listeners
+        enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+
+        document.getElementById('subscription-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            if (name.trim() === '') {
+                document.getElementById('form-feedback').textContent = "Por favor, digite seu nome";
+                document.getElementById('form-feedback').style.color = "red";
+                return;
+            }
+
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userEmail', email);
+
+            showWelcomeMessage(name);
+            updateMessage();
+        });
+
+        // Inicialização
+        checkNotificationPermission();
+        
+        // Simula um pequeno atraso no carregamento
+        setTimeout(() => {
+            updateMessage();
+        }, 1000);
+        
+        setInterval(updateMessage, 60000); // Atualiza a cada minuto
+
+        // Carrega dados salvos
+        if (localStorage.getItem('userName')) {
+            showWelcomeMessage(localStorage.getItem('userName'));
+        }
+    </script>
+</body>
+</html>
